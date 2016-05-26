@@ -1,15 +1,20 @@
-var express = require('express');
-var app = express();
+#!/usr/bin/env node
+var serialport = require('serialport')
+var SerialPort = serialport.SerialPort
+var every = require('every-time-mirror')
 
-// reply to request with "Hello World!"
-app.get('/', function (req, res) {
-  res.send('Hello NuVuPrint!');
-});
 
-//start a server on port 80 and log its start to our console
-var server = app.listen(80, function () {
+var port = new SerialPort('/dev/tty.usbmodem1411', {
+  baudrate: 115200,
+  parser: serialport.parsers.readline('\n')
+})
 
-  var port = server.address().port;
-  console.log('Example app listening on port ', port);
-
-});
+port.on('open', () => {
+  port.on('data', (data) => {
+    console.log(data)
+  })
+  every('1s', () => {
+    console.log('sending G28')
+    port.write('G28\n')
+  })
+})
